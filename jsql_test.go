@@ -5,7 +5,6 @@ import (
 	"../go-jsql"
 
 	"bytes"
-
 	"database/sql"
 	"testing"
 
