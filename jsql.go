@@ -54,14 +54,14 @@ func rewrite(q string) (qq string, varnames []string) {
 // If w is an http.ResponseWriter (has a Header() http.Header method), then it will set
 // the Content-Type header to application/json;charset=UTF-8 before the first write.
 //
-// If n == 0, nothing will have been written to w, and the header will not have been
-// set, meaning it is not too late to call
+// If n == 0, nothing, not even the opening bracket, will have been written to w,
+// and the header will not have been set, meaning it is not too late to call e.g.
 //
-//    http.Error(w, err.String(), http.StatusInternalError)
+//    http.Error(w, err.Error(), http.StatusInternalError)
 //
 // otherwise the error will have to be tacked on to the already produced output or
 // reported out of band.  If any elements have been written the queryfunc will
-// always generate a proper closing brace.
+// always generate a proper closing bracket.
 type QueryFunc func(args map[string]interface{}, w io.Writer) (n int, err error)
 
 // Q builds a function that can execute the query on a database given
