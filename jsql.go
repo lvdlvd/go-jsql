@@ -142,14 +142,24 @@ func Q(db *sql.DB, query string) (QueryFunc, error) {
 	}, nil
 }
 
-// Handler produces a http.Handler that takes arguments from
+// Handler is a convenience wrapper around MkHandler
+// that will die on error.
+func Handler(db *sql.DB, query string) http.Handler {
+	h, err := MkHandler(db, query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return h
+}
+
+// MkHandler produces a http.Handler that takes arguments from
 // the request, and runs Q, producing a nice error message if needed.
 //
 // The arguments are taken from the request's formvalues or any
 // input json object, depending on the requests content type, merged with
 // the "github.com/gorilla/mux".Vars(r), which take precedence
 // in case of name conflicts.
-func Handler(db *sql.DB, query string) (http.Handler, error) {
+func MkHandler(db *sql.DB, query string) (http.Handler, error) {
 	_, names := rewrite(query)
 
 	qf, err := Q(db, query)
