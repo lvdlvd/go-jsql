@@ -171,18 +171,19 @@ func MkHandler(db *sql.DB, query string) (http.Handler, error) {
 		args := make(map[string]interface{})
 
 		var jsonargs map[string]interface{}
-		ct := r.Header.Get("Content-Type")
-		if ct == "" {
-			ct = "application/octet-stream"
-		}
-		ct, _, err = mime.ParseMediaType(ct)
-		if ct == "application/json" {
-			defer r.Body.Close()
-			if err := json.NewDecoder(io.LimitReader(r.Body, 128<<10)).Decode(&jsonargs); err != nil {
-				http.Error(w, fmt.Sprintf("Can't decode json request: %v", err), http.StatusBadRequest)
+		if r.Method == "POST" || r.Method == "PUT" {
+			ct := r.Header.Get("Content-Type")
+			if ct == "" {
+				ct = "application/octet-stream"
+			}
+			ct, _, err = mime.ParseMediaType(ct)
+			if ct == "application/json" {
+				defer r.Body.Close()
+				if err := json.NewDecoder(io.LimitReader(r.Body, 128<<10)).Decode(&jsonargs); err != nil {
+					http.Error(w, fmt.Sprintf("Can't decode json request: %v", err), http.StatusBadRequest)
+				}
 			}
 		}
-
 		muxargs := mux.Vars(r)
 
 		for _, n := range names {
