@@ -14,7 +14,7 @@ import (
 //         Results: <-chan []interface{}   // a chanel of records corresponding to the querys results
 //     }
 //
-type QueryTmplFunc func(args map[string]interface{}, tmpl template.Template, w io.Writer) error
+type QueryTmplFunc func(args map[string]interface{}, tmpl *template.Template, w io.Writer) error
 
 // QTmpl is like Q, but it returns a QueryTmplFunc
 func QTmpl(db *sql.DB, query string) (QueryTmplFunc, error) {
@@ -23,7 +23,8 @@ func QTmpl(db *sql.DB, query string) (QueryTmplFunc, error) {
 	if err != nil {
 		return nil, err
 	}
-	return func(args map[string]interface{}, tmpl template.Template, w io.Writer) error {
+
+	return func(args map[string]interface{}, tmpl *template.Template, w io.Writer) error {
 		var argv []interface{}
 		for _, v := range argn {
 			argv = append(argv, args[v])
