@@ -66,15 +66,17 @@ func QTmpl(db *sql.DB, query string) (QueryTmplFunc, error) {
 
 			select {
 			case err := <-errch:
+				// early exit from the template
 				return err
 			case datach <- retv:
 				// nix
 			}
 		}
-		close(datach)
-		if err := rows.Err(); err != nil {
+		close(datach)                      // will exit the template
+		terr := <-errch                    // wait for it, or it may not be done writing
+		if err := rows.Err(); err != nil { // db error trumps
 			return err
 		}
-		return <-errch
+		return terr
 	}, nil
 }
