@@ -180,12 +180,17 @@ func MkHandler(db *sql.DB, query string) (http.Handler, error) {
 			if ct == "application/json" {
 				defer r.Body.Close()
 				if err := json.NewDecoder(io.LimitReader(r.Body, 128<<10)).Decode(&jsonargs); err != nil {
-					http.Error(w, fmt.Sprintf("Can't decode json request: %v", err), http.StatusBadRequest)
+					if err != io.EOF { // empty body is allowed
+						http.Error(w, fmt.Sprintf("Can't decode json request: %v", err), http.StatusBadRequest)
+						return
+					}
 				}
 			}
 		}
 		muxargs := mux.Vars(r)
-
+		// TODO harden against malicious input
+		// for now we just rely on precedence: muxargs trum the others
+		// but this still allows arbitrary values to end up in the query parameters
 		for _, n := range names {
 			if v, ok := muxargs[n]; ok {
 				args[n] = v
