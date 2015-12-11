@@ -75,8 +75,8 @@ type QueryFunc func(args map[string]interface{}, w io.Writer) (n int, err error)
 // and supply them to the db.Stmt.Execute method in the correct order.
 // The query will be rewritten to use $1, $2 .. etc.
 //
-// The generated json will be an array of objects, where
-// each object has a name taken from the columns as named in the SQL query.
+// The generated json will be an array of objects, one per row where
+// each row object has keys named after the columns in the SQL query.
 //
 func Q(db *sql.DB, query string) (QueryFunc, error) {
 	q, argn := rewrite(query)
