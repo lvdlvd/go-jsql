@@ -46,9 +46,6 @@ func rewrite(q string) (qq string, varnames []string) {
 		}
 	}
 	b.WriteString(q[l:])
-
-	log.Println(b.String(), varnames)
-
 	return b.String(), varnames
 }
 
