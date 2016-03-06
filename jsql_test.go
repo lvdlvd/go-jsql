@@ -1,9 +1,7 @@
 // This test requires access to a postgres database named 'test' by the current os user.
-package jsql_test
+package jsql
 
 import (
-	"../go-jsql"
-
 	"bytes"
 	"database/sql"
 	"testing"
@@ -34,7 +32,7 @@ func TestThatItWorks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	q, err := jsql.Q(db, "SELECT i AS int, s AS string FROM foo WHERE i > ${first} AND NOT s LIKE ${pat}")
+	q, err := Q(db, "SELECT i AS int, s AS string FROM foo WHERE i > ${first} AND NOT s LIKE ${pat}")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,4 +52,47 @@ func TestThatItWorks(t *testing.T) {
 	if b.String() != xpct {
 		t.Errorf("Expected %q, got %q", xpct, b.String())
 	}
+
+	_, err = db.Exec(`drop table foo`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRepeatedArg(t *testing.T) {
+	_, err := db.Exec(`create temp table foo (i int, s text)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec(`insert into foo (i,s) values (1, 'one'), (5, 'five'), (7, 'seven'), (9, 'nine')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	q, err := Q(db, "SELECT i AS int, s AS string, ${first}::int as arg FROM foo WHERE i > ${first} AND NOT s LIKE ${pat}")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var b bytes.Buffer
+
+	n, err := q(map[string]interface{}{"first": 3, "pat": `%eve%`}, &b)
+	if err != nil || n != 2 {
+		t.Error(n, err)
+	}
+
+	xpct := `[
+{"arg":3,"int":5,"string":"five"},
+{"arg":3,"int":9,"string":"nine"}
+]`
+
+	if b.String() != xpct {
+		t.Errorf("Expected %s,\ngot %s", xpct, b.String())
+	}
+
+	_, err = db.Exec(`drop table foo`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 }

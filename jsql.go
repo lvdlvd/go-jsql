@@ -28,18 +28,27 @@ var PositionalQueryVars = true
 func rewrite(q string) (qq string, varnames []string) {
 	idx := reVars.FindAllStringSubmatchIndex(q, -1)
 	l := 0
+	var pos = map[string]int{}
 	var b bytes.Buffer
 	for _, v := range idx {
-		varnames = append(varnames, q[v[2]:v[3]])
 		b.WriteString(q[l:v[0]])
 		l = v[1]
+		name := q[v[2]:v[3]]
 		if PositionalQueryVars {
-			b.WriteString(fmt.Sprintf("$%d", len(varnames)))
+			if _, ok := pos[name]; !ok {
+				varnames = append(varnames, name)
+				pos[name] = len(varnames)
+			}
+			b.WriteString(fmt.Sprintf("$%d", pos[name]))
 		} else {
+			varnames = append(varnames, name)
 			b.WriteString("?")
 		}
 	}
 	b.WriteString(q[l:])
+
+	log.Println(b.String(), varnames)
+
 	return b.String(), varnames
 }
 
@@ -147,7 +156,7 @@ func Q(db *sql.DB, query string) (QueryFunc, error) {
 func Handler(db *sql.DB, query string) http.Handler {
 	h, err := MkHandler(db, query)
 	if err != nil {
-		log.Fatal(err)
+		log.Panicf("MkHandler(%q): %v", query, err)
 	}
 	return h
 }
