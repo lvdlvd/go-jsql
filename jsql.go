@@ -24,6 +24,8 @@ var reVars = regexp.MustCompile(`\${([^}]+)}`)
 // or $1, $2... syntax.
 var PositionalQueryVars = true
 
+var Debug = false
+
 // TODO(lvd) less simplistic parsing of query.  worry about quoting etc.
 func rewrite(q string) (qq string, varnames []string) {
 	idx := reVars.FindAllStringSubmatchIndex(q, -1)
@@ -211,7 +213,13 @@ func MkHandler(db *sql.DB, query string) (http.Handler, error) {
 				continue
 			}
 		}
-		// TBD: what if not all names set? can postgres $n deal with nil?
+		if Debug {
+			for k, v := range args {
+				log.Printf("jsql arg %s = %#v", k, v)
+			}
+		}
+
+		// if not all names set postgres $n deals with nil.
 		n, err := qf(args, w)
 		if err != nil {
 			if n == 0 {
