@@ -179,7 +179,7 @@ func MkHandler(db *sql.DB, query string) (http.Handler, error) {
 		args := make(map[string]interface{})
 
 		var jsonargs map[string]interface{}
-		if r.Method == "POST" || r.Method == "PUT" {
+		if r.Method == "POST" || r.Method == "PUT" || r.Method == "DELETE" {
 			ct := r.Header.Get("Content-Type")
 			if ct == "" {
 				ct = "application/octet-stream"
